@@ -39,3 +39,5 @@ Replace the date/time once the next ride is booked.
 ## Publish
 
 Upload all of these files to the root of your GitHub repository. Then enable GitHub Pages from the repository settings. After that, connect `spokanistansaga.com` as the custom domain.
+
+Update 4 adds the photographed signed Covenant and the Spokane reunion shirt photo while retaining an empty future-photo slot on the Spokane ride page.

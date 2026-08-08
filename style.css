@@ -241,3 +241,24 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
   .city-card { aspect-ratio: 16 / 9; }
   .future-slot { min-height: 280px; }
 }
+
+/* Document / poster images that should be shown in full instead of cropped */
+.document-frame {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: #111;
+}
+.document-photo {
+  width: 100%;
+  height: auto;
+  max-height: 980px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+.gallery-poster {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #111;
+}
