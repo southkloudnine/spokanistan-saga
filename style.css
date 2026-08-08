@@ -183,3 +183,36 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
   .footer-grid { flex-direction:column; }
   .signature-grid { grid-template-columns:1fr; gap:40px; }
 }
+
+.page-lead {
+  max-width: 760px;
+  margin: 24px 0 0;
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+}
+.ride-main-photo { min-height: 560px; background-position: center 56%; }
+.gallery-landscape { background-position: center 56%; }
+.gallery-portrait { background-position: center 42%; }
+.archive-placeholder {
+  min-height: 330px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(135deg, rgba(240,75,35,.06), transparent 55%),
+    repeating-linear-gradient(-45deg, #111 0, #111 10px, #151515 10px, #151515 20px);
+}
+.archive-mark {
+  color: #777;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-align: center;
+  line-height: 1.35;
+  font-size: .88rem;
+}
+.archive-card { cursor: default; }
+.archive-card:hover { transform: none; border-color: var(--line); }
+
+@media (max-width: 760px) {
+  .ride-main-photo { min-height: 390px; }
+}
