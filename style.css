@@ -216,3 +216,28 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
 @media (max-width: 760px) {
   .ride-main-photo { min-height: 390px; }
 }
+
+/* --- Spokanistan Saga update 3: consistent city cards + future photo slots --- */
+.card-photo {
+  position: relative;
+}
+.city-card {
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.future-slot {
+  min-height: 330px;
+  background:
+    linear-gradient(135deg, rgba(240,75,35,.06), transparent 55%),
+    repeating-linear-gradient(-45deg, #111 0, #111 10px, #151515 10px, #151515 20px);
+}
+.prose .future-slot {
+  margin-top: 18px;
+}
+@media (max-width: 760px) {
+  .city-card { aspect-ratio: 16 / 9; }
+  .future-slot { min-height: 280px; }
+}
