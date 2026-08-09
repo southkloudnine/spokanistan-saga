@@ -300,3 +300,108 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
     min-height: 320px;
   }
 }
+
+/* --- Update 6: wide next-ride layout + uncropped clickable ride photos --- */
+.next-feature {
+  display: grid;
+  gap: 34px;
+}
+
+.next-wide-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  background-color: #111;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.next-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+  gap: 54px;
+  align-items: start;
+}
+
+.next-meta .countdown {
+  margin-top: 0;
+}
+
+/* On ride pages, never crop photographic evidence. */
+.ride-main-photo,
+.gallery-photo {
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  background-position: center !important;
+  background-color: #111;
+}
+
+.gallery-photo[data-image],
+.ride-main-photo[data-image] {
+  cursor: zoom-in;
+}
+
+.photo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(0,0,0,.94);
+}
+
+.photo-lightbox.open {
+  display: flex;
+}
+
+.photo-lightbox img {
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  box-shadow: 0 20px 70px rgba(0,0,0,.55);
+}
+
+.photo-lightbox-close {
+  position: fixed;
+  top: 18px;
+  right: 24px;
+  z-index: 1001;
+  border: 0;
+  background: transparent;
+  color: white;
+  font-size: 2.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.photo-lightbox-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  color: #aaa;
+  font-size: .75rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .next-details {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .next-wide-photo {
+    aspect-ratio: 16 / 9;
+  }
+
+  .photo-lightbox {
+    padding: 12px;
+  }
+}

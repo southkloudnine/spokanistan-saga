@@ -40,3 +40,63 @@ if (countdown) {
   tick();
   setInterval(tick, 30000);
 }
+
+// Full-size photo viewer for ride-page photo evidence.
+const zoomablePhotos = document.querySelectorAll('.gallery-photo[data-image], .ride-main-photo[data-image]');
+if (zoomablePhotos.length) {
+  const lightbox = document.createElement('div');
+  lightbox.className = 'photo-lightbox';
+  lightbox.setAttribute('role', 'dialog');
+  lightbox.setAttribute('aria-modal', 'true');
+  lightbox.setAttribute('aria-label', 'Full-size ride photo');
+
+  const closeButton = document.createElement('button');
+  closeButton.className = 'photo-lightbox-close';
+  closeButton.type = 'button';
+  closeButton.setAttribute('aria-label', 'Close photo');
+  closeButton.textContent = '×';
+
+  const fullImage = document.createElement('img');
+  fullImage.alt = 'Full-size ride photo';
+
+  const hint = document.createElement('div');
+  hint.className = 'photo-lightbox-hint';
+  hint.textContent = 'Tap outside photo or press Esc to close';
+
+  lightbox.append(closeButton, fullImage, hint);
+  document.body.appendChild(lightbox);
+
+  const closeLightbox = () => {
+    lightbox.classList.remove('open');
+    fullImage.removeAttribute('src');
+    document.body.style.overflow = '';
+  };
+
+  zoomablePhotos.forEach((photo) => {
+    photo.setAttribute('tabindex', '0');
+    photo.setAttribute('role', 'button');
+    photo.setAttribute('aria-label', 'Open full-size photo');
+
+    const openPhoto = () => {
+      fullImage.src = photo.dataset.image;
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    };
+
+    photo.addEventListener('click', openPhoto);
+    photo.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openPhoto();
+      }
+    });
+  });
+
+  closeButton.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (event) => {
+    if (event.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox();
+  });
+}
