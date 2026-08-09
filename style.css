@@ -262,3 +262,41 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
   background-position: center;
   background-color: #111;
 }
+
+/* --- Update 5: full Houston image + expanded Spokane gallery --- */
+.next-image-contain {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #111;
+}
+
+.ride-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 24px;
+}
+
+.gallery-photo {
+  min-height: 360px;
+  border: 1px solid var(--line);
+  background-color: #111;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.gallery-photo.gallery-contain {
+  background-size: contain;
+}
+
+@media (max-width: 760px) {
+  .ride-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-photo {
+    min-height: 320px;
+  }
+}
