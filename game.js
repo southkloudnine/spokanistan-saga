@@ -5,6 +5,7 @@
   const ctx = canvas.getContext('2d');
   const milesEl = document.getElementById('game-miles');
   const beersEl = document.getElementById('game-beers');
+  const hitsEl = document.getElementById('game-hits');
   const speedEl = document.getElementById('game-speed');
   const bestEl = document.getElementById('game-best');
   const overlay = document.getElementById('game-overlay');
@@ -13,17 +14,20 @@
   const startBtn = document.getElementById('game-start');
   const leftBtn = document.getElementById('game-left');
   const rightBtn = document.getElementById('game-right');
+  const stageWrap = document.querySelector('.game-stage-wrap');
 
   const W = canvas.width;
   const H = canvas.height;
   const horizonY = 205;
   const roadBottom = 1130;
   const roadTop = 250;
+  const PLAYER_Y = H - 78;
 
   let running = false;
   let last = 0;
   let miles = 0;
   let beers = 0;
+  let hits = 0;
   let best = Number(localStorage.getItem('covenantRunBest') || 0);
   let speed = 60;
   let playerLane = 1;
@@ -32,33 +36,44 @@
   let objects = [];
   let spawnTimer = 0;
   let sceneryOffset = 0;
-  let slowTimer = 0;
   let flashText = '';
   let flashTimer = 0;
   let avoided = 0;
+  let invulnerableTimer = 0;
+  let impactTimer = 0;
+  let particles = [];
 
   bestEl.textContent = `${best.toFixed(1)} mi`;
 
   const laneXAt = (lane, y) => {
     const t = (y - horizonY) / (H - horizonY);
     const halfWidth = (roadTop / 2) + t * ((roadBottom - roadTop) / 2);
-    const center = W / 2;
-    return center + (lane - 1) * halfWidth * 0.52;
+    return W / 2 + (lane - 1) * halfWidth * 0.52;
   };
+
+  function updateHud() {
+    milesEl.textContent = miles.toFixed(1);
+    beersEl.textContent = String(beers);
+    if (hitsEl) hitsEl.textContent = `${hits} / 3`;
+    speedEl.textContent = `${Math.round(speed)} mph`;
+  }
 
   function reset() {
     miles = 0;
     beers = 0;
+    hits = 0;
     speed = 60;
     playerLane = 1;
-    playerX = targetX = laneXAt(1, H - 82);
+    playerX = targetX = laneXAt(1, PLAYER_Y);
     objects = [];
     spawnTimer = 0;
     sceneryOffset = 0;
-    slowTimer = 0;
     flashText = '';
     flashTimer = 0;
     avoided = 0;
+    invulnerableTimer = 0;
+    impactTimer = 0;
+    particles = [];
     updateHud();
   }
 
@@ -78,7 +93,7 @@
     }
     bestEl.textContent = `${best.toFixed(1)} mi`;
     titleEl.textContent = 'RIDE TERMINATED';
-    messageEl.innerHTML = `${reason}<br><br><strong>${miles.toFixed(1)} miles survived</strong><br>${avoided} hazards avoided • ${beers} Beer Stop${beers === 1 ? '' : 's'}<br><br>The Covenant remains in force.`;
+    messageEl.innerHTML = `${reason}<br><br><strong>${miles.toFixed(1)} miles survived</strong><br>${avoided} hazards avoided • ${hits} hits • ${beers} Beer Stop${beers === 1 ? '' : 's'}<br><br>The Covenant remains in force.`;
     startBtn.textContent = 'TRY AGAIN';
     overlay.classList.remove('hidden');
   }
@@ -86,13 +101,7 @@
   function steer(dir) {
     if (!running) return;
     playerLane = Math.max(0, Math.min(2, playerLane + dir));
-    targetX = laneXAt(playerLane, H - 82);
-  }
-
-  function updateHud() {
-    milesEl.textContent = miles.toFixed(1);
-    beersEl.textContent = String(beers);
-    speedEl.textContent = `${Math.round(speed)} mph`;
+    targetX = laneXAt(playerLane, PLAYER_Y);
   }
 
   function spawnObject() {
@@ -105,67 +114,130 @@
     else type = 'minivan';
 
     let lane = Math.floor(Math.random() * 3);
-    if (objects.length && Math.random() < 0.25) {
+    if (objects.length && Math.random() < 0.28) {
       lane = (objects[objects.length - 1].lane + 1 + Math.floor(Math.random() * 2)) % 3;
     }
-    objects.push({ type, lane, z: 0, passed: false });
+    objects.push({ type, lane, z: 0, resolved: false });
   }
 
   function collision(obj) {
     const y = horizonY + obj.z * (H - horizonY);
-    if (y < H - 155 || y > H - 45) return false;
+    if (y < PLAYER_Y - 98 || y > PLAYER_Y + 48) return false;
     const x = laneXAt(obj.lane, y);
-    return Math.abs(x - playerX) < 72;
+    const hitRadius = obj.type === 'gravel' ? 94 : 82;
+    return Math.abs(x - playerX) < hitRadius;
+  }
+
+  function makeImpact(x, y, type) {
+    impactTimer = 420;
+    flashText = type === 'beer' ? 'BEER STOP +0.5 MI' : 'WHAM!';
+    flashTimer = type === 'beer' ? 1250 : 700;
+
+    if (stageWrap && type !== 'beer') {
+      stageWrap.classList.remove('game-hit');
+      void stageWrap.offsetWidth;
+      stageWrap.classList.add('game-hit');
+    }
+
+    const count = type === 'beer' ? 18 : 34;
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * (type === 'beer' ? 220 : 390),
+        vy: -60 - Math.random() * 260,
+        life: 450 + Math.random() * 420,
+        maxLife: 900,
+        beer: type === 'beer'
+      });
+    }
+  }
+
+  function resolveCollision(obj) {
+    const y = horizonY + obj.z * (H - horizonY);
+    const x = laneXAt(obj.lane, y);
+
+    if (obj.type === 'beer') {
+      beers += 1;
+      miles += 0.5;
+      makeImpact(x, y, 'beer');
+      obj.resolved = true;
+      updateHud();
+      return;
+    }
+
+    if (invulnerableTimer > 0) return;
+
+    hits += 1;
+    invulnerableTimer = 1100;
+    makeImpact(x, y, obj.type);
+    obj.resolved = true;
+    updateHud();
+
+    const hitMessages = {
+      cone: 'Cone strike. The Department of Transportation has been notified.',
+      gravel: 'Gravel attack. Traction has left the chat.',
+      deer: 'Wildlife encounter. Negotiations failed.',
+      minivan: 'Minivan contact. Dignity damage is extensive.'
+    };
+    flashText = `${hitMessages[obj.type]}  HIT ${hits}/3`;
+    flashTimer = 1300;
+
+    if (hits >= 3) {
+      const endings = {
+        cone: 'Three strikes. The cones have won.',
+        gravel: 'Three hits. Gravel has terminated the expedition.',
+        deer: 'Three hits. The wildlife committee has revoked riding privileges.',
+        minivan: 'Three hits. Defeated by suburban transportation.'
+      };
+      setTimeout(() => endGame(endings[obj.type]), 170);
+    }
+  }
+
+  function updateParticles(dt) {
+    for (const p of particles) {
+      p.x += p.vx * dt / 1000;
+      p.y += p.vy * dt / 1000;
+      p.vy += 520 * dt / 1000;
+      p.life -= dt;
+    }
+    particles = particles.filter(p => p.life > 0);
   }
 
   function update(dt) {
-    const slowFactor = slowTimer > 0 ? 0.52 : 1;
-    if (slowTimer > 0) slowTimer -= dt;
+    if (invulnerableTimer > 0) invulnerableTimer -= dt;
+    if (impactTimer > 0) impactTimer -= dt;
     if (flashTimer > 0) flashTimer -= dt;
 
-    speed = Math.min(145, 60 + miles * 1.25);
-    const worldSpeed = (0.21 + speed / 430) * slowFactor;
-    miles += dt * (0.00225 * (speed / 60));
-    sceneryOffset += dt * speed * 0.02;
+    speed = Math.min(155, 60 + miles * 1.45);
+    miles += dt * (0.00245 * (speed / 60));
+    sceneryOffset += dt * speed * 0.025;
 
-    playerX += (targetX - playerX) * Math.min(1, dt * 0.012);
+    playerX += (targetX - playerX) * Math.min(1, dt * 0.016);
 
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
       spawnObject();
-      spawnTimer = Math.max(410, 1120 - speed * 4.2) + Math.random() * 390;
+      spawnTimer = Math.max(330, 980 - speed * 3.9) + Math.random() * 250;
     }
 
     for (const obj of objects) {
-      obj.z += dt * worldSpeed / 1000;
+      // Perspective should get FASTER near the rider, not slower.
+      const baseAdvance = 0.00042 + speed * 0.0000024;
+      const perspectiveBoost = 0.82 + obj.z * 1.25;
+      obj.z += dt * baseAdvance * perspectiveBoost;
 
-      if (!obj.passed && obj.z > 0.95) {
-        if (collision(obj)) {
-          obj.passed = true;
-          if (obj.type === 'beer') {
-            beers++;
-            miles += 0.5;
-            slowTimer = 2600;
-            flashText = 'BEER STOP +0.5 MI';
-            flashTimer = 1500;
-          } else {
-            const names = {
-              cone: 'A traffic cone has filed a formal complaint.',
-              gravel: 'Gravel has once again betrayed the Brotherhood.',
-              deer: 'The deer had right of way. Probably.',
-              minivan: 'Defeated by a minivan. The archives will remember this.'
-            };
-            endGame(names[obj.type]);
-            return;
-          }
-        } else if (obj.type !== 'beer') {
-          avoided++;
-        }
-        obj.passed = true;
+      if (!obj.resolved && collision(obj)) {
+        resolveCollision(obj);
+      }
+
+      if (!obj.resolved && obj.z > 1.04) {
+        if (obj.type !== 'beer') avoided += 1;
+        obj.resolved = true;
       }
     }
 
-    objects = objects.filter(o => o.z < 1.13);
+    objects = objects.filter(o => o.z < 1.15 && !(o.resolved && o.type === 'beer'));
+    updateParticles(dt);
     updateHud();
   }
 
@@ -291,23 +363,91 @@
 
   function drawBike() {
     const x = playerX;
-    const y = H - 74;
+    const y = PLAYER_Y;
     ctx.save();
     ctx.translate(x, y);
 
-    ctx.fillStyle = '#060606';
-    ctx.beginPath(); ctx.ellipse(-27, 12, 18, 38, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(27, 12, 18, 38, 0, 0, Math.PI*2); ctx.fill();
-
-    ctx.fillStyle = '#f04b23';
+    // One centered rear tire: unmistakably a motorcycle, not a trike.
+    ctx.fillStyle = '#050505';
     ctx.beginPath();
-    ctx.moveTo(0, -75); ctx.lineTo(-41, -12); ctx.lineTo(-25, 28); ctx.lineTo(0, 14); ctx.lineTo(25, 28); ctx.lineTo(41, -12); ctx.closePath();
+    ctx.ellipse(0, 18, 17, 48, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#151515';
-    ctx.beginPath(); ctx.ellipse(0, -54, 25, 30, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#ddd'; ctx.fillRect(-26, -24, 16, 10); ctx.fillRect(10, -24, 16, 10);
+    // Rear fender / undertail.
+    ctx.fillStyle = '#171717';
+    ctx.beginPath();
+    ctx.moveTo(-25, -8);
+    ctx.lineTo(-17, 29);
+    ctx.lineTo(17, 29);
+    ctx.lineTo(25, -8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sport-bike tail section.
+    ctx.fillStyle = '#f04b23';
+    ctx.beginPath();
+    ctx.moveTo(0, -82);
+    ctx.lineTo(-37, -36);
+    ctx.lineTo(-27, 3);
+    ctx.lineTo(0, -9);
+    ctx.lineTo(27, 3);
+    ctx.lineTo(37, -36);
+    ctx.closePath();
+    ctx.fill();
+
+    // Seat / rider torso.
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.ellipse(0, -48, 27, 36, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0, -83, 22, 25, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tail light.
+    ctx.fillStyle = '#ff3b2f';
+    ctx.fillRect(-18, -20, 36, 10);
+    ctx.fillStyle = '#fff0e8';
+    ctx.fillRect(-13, -18, 26, 4);
+
+    // Twin exhaust outlets, close together under tail.
+    ctx.fillStyle = '#707070';
+    ctx.beginPath(); ctx.arc(-20, 2, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20, 2, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath(); ctx.arc(-20, 2, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20, 2, 4, 0, Math.PI * 2); ctx.fill();
+
+    // Handlebar tips / mirrors hint at a narrow bike silhouette.
+    ctx.strokeStyle = '#6a6a6a';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-17, -57); ctx.lineTo(-46, -45);
+    ctx.moveTo(17, -57); ctx.lineTo(46, -45);
+    ctx.stroke();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.ellipse(-50, -45, 8, 5, -0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(50, -45, 8, 5, 0.2, 0, Math.PI * 2); ctx.fill();
+
+    // Flicker while briefly invulnerable after a hit.
+    if (invulnerableTimer > 0 && Math.floor(invulnerableTimer / 90) % 2 === 0) {
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      ctx.fillRect(-60, -115, 120, 180);
+    }
     ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.beer ? '#d5b35a' : '#f04b23';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.beer ? 5 : 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
   }
 
   function render() {
@@ -316,16 +456,19 @@
     drawRoad();
     objects.sort((a,b) => a.z - b.z).forEach(drawObject);
     drawBike();
+    drawParticles();
 
-    if (slowTimer > 0) {
-      ctx.fillStyle = 'rgba(240,75,35,.08)';
-      ctx.fillRect(0,0,W,H);
+    if (impactTimer > 0) {
+      const alpha = Math.min(.28, impactTimer / 1000);
+      ctx.fillStyle = `rgba(240,75,35,${alpha})`;
+      ctx.fillRect(0, 0, W, H);
     }
+
     if (flashTimer > 0) {
       ctx.fillStyle = '#f4f1ea';
-      ctx.font = 'bold 34px Arial';
+      ctx.font = 'bold 30px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(flashText, W/2, 110);
+      ctx.fillText(flashText, W/2, 105);
     }
   }
 
@@ -350,7 +493,6 @@
   leftBtn.addEventListener('pointerdown', () => steer(-1));
   rightBtn.addEventListener('pointerdown', () => steer(1));
 
-  // Swipe steering on the canvas.
   let pointerStartX = null;
   canvas.addEventListener('pointerdown', e => { pointerStartX = e.clientX; });
   canvas.addEventListener('pointerup', e => {

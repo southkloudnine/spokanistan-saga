@@ -446,7 +446,7 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
 }
 .game-hud {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   background: var(--line);
   border-bottom: 1px solid var(--line);
@@ -518,4 +518,20 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
   .game-hud { grid-template-columns: repeat(2, 1fr); }
   .game-help { grid-template-columns: 1fr; }
   .game-control { flex: 1; min-width: 0; }
+}
+
+/* Covenant Run impact feedback */
+.game-stage-wrap.game-hit {
+  animation: game-hit-shake .22s linear 1;
+}
+@keyframes game-hit-shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+@media (max-width: 760px) {
+  .game-hud { grid-template-columns: repeat(2, 1fr); }
 }
