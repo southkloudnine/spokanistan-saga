@@ -405,3 +405,117 @@ blockquote { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; fo
     padding: 12px;
   }
 }
+
+/* Covenant Run teaser + game */
+.game-teaser {
+  display: grid;
+  grid-template-columns: 1.5fr .5fr;
+  gap: 46px;
+  align-items: center;
+}
+.game-teaser h2 { font-size: clamp(3.4rem, 8vw, 7rem); }
+.game-teaser-sign {
+  aspect-ratio: 1;
+  max-width: 270px;
+  justify-self: end;
+  border: 5px solid var(--accent);
+  transform: rotate(5deg);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  color: var(--accent);
+  padding: 28px;
+}
+.game-teaser-sign span { font-size: 4rem; line-height: 1; }
+.game-teaser-sign strong { margin-top: 12px; letter-spacing: .08em; }
+
+.game-page { padding: 118px 0 80px; }
+.game-head { margin-bottom: 28px; }
+.game-head h1 {
+  margin: 0;
+  font-size: clamp(3.4rem, 8vw, 7rem);
+  line-height: .9;
+  letter-spacing: -.05em;
+  text-transform: uppercase;
+}
+.game-shell {
+  border: 1px solid var(--line);
+  background: #0d0d0d;
+  overflow: hidden;
+}
+.game-hud {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.game-hud div { background: #111; padding: 12px 14px; }
+.game-hud span { display: block; color: var(--muted); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; }
+.game-hud strong { font-size: 1.25rem; }
+.game-stage-wrap { position: relative; background: #090909; }
+#covenant-game {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  touch-action: none;
+}
+.game-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0,0,0,.55);
+}
+.game-overlay.hidden { display: none; }
+.game-panel {
+  width: min(520px, 92%);
+  text-align: center;
+  border: 1px solid #444;
+  background: rgba(9,9,9,.94);
+  padding: 30px;
+}
+.game-panel h2 { font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 14px; }
+.game-panel p { color: #d0ccc4; }
+.game-panel .button { background: none; color: var(--text); cursor: pointer; }
+.game-panel .button:hover { background: var(--text); color: var(--bg); }
+.game-controls {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 18px;
+  border-top: 1px solid var(--line);
+}
+.game-control {
+  min-width: 120px;
+  border: 1px solid #444;
+  background: #151515;
+  color: var(--text);
+  padding: 15px 24px;
+  font: inherit;
+  font-weight: 900;
+  letter-spacing: .08em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.game-control:active { background: var(--accent); color: #fff; }
+.game-help {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+  margin-top: 26px;
+}
+.game-help > div { border-top: 1px solid var(--line); padding-top: 18px; }
+.game-help h3 { margin: 0 0 8px; text-transform: uppercase; }
+.game-help p { margin: 0; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .game-teaser { grid-template-columns: 1fr; }
+  .game-teaser-sign { justify-self: start; max-width: 190px; }
+  .game-hud { grid-template-columns: repeat(2, 1fr); }
+  .game-help { grid-template-columns: 1fr; }
+  .game-control { flex: 1; min-width: 0; }
+}

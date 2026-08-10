@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090909" />
+  <title>Covenant Run — The Spokanistan Saga</title>
+  <meta name="description" content="Covenant Run: the official Spokanistan Saga motorcycle survival simulator." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">SPOKANISTAN SAGA</a>
+    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+    <nav class="nav">
+      <a href="index.html#next">Next Ride</a>
+      <a href="index.html#past">Past Rides</a>
+      <a href="covenant.html">The Covenant</a>
+      <a href="about.html">The Bros</a>
+      <a href="game.html">Covenant Run</a>
+    </nav>
+  </header>
+
+  <main class="game-page">
+    <div class="wrap">
+      <div class="game-head">
+        <p class="eyebrow">THE OFFICIAL RIDING SIMULATOR</p>
+        <h1>COVENANT<br>RUN</h1>
+        <p class="page-lead">Three lanes. One motorcycle. Zero insurance paperwork. Dodge everything. Collect Beer Stops. Remain among the living.</p>
+      </div>
+
+      <section class="game-shell" aria-label="Covenant Run motorcycle game">
+        <div class="game-hud" aria-live="polite">
+          <div><span>Miles survived</span><strong id="game-miles">0.0</strong></div>
+          <div><span>Beer stops</span><strong id="game-beers">0</strong></div>
+          <div><span>Speed</span><strong id="game-speed">60 mph</strong></div>
+          <div><span>Best run</span><strong id="game-best">0.0 mi</strong></div>
+        </div>
+
+        <div class="game-stage-wrap">
+          <canvas id="covenant-game" width="1280" height="720" aria-label="Motorcycle obstacle avoidance game"></canvas>
+
+          <div class="game-overlay" id="game-overlay">
+            <div class="game-panel">
+              <p class="eyebrow">COVENANT DIVISION OF RECREATION</p>
+              <h2 id="game-title">READY TO RIDE?</h2>
+              <p id="game-message">Arrow keys or A/D to steer. On a phone, use the buttons below. Beer Stops are worth bonus miles and temporary slow-motion. Obviously this is a game, not riding advice.</p>
+              <button class="button" type="button" id="game-start">FULL SEND</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-controls" aria-label="Game steering controls">
+          <button class="game-control" id="game-left" type="button">← LEFT</button>
+          <button class="game-control" id="game-right" type="button">RIGHT →</button>
+        </div>
+      </section>
+
+      <div class="game-help">
+        <div>
+          <h3>Things trying to ruin the ride</h3>
+          <p>Traffic cones, gravel patches, deer, minivans, and other completely scientific hazards.</p>
+        </div>
+        <div>
+          <h3>Beer Stop</h3>
+          <p>Grab the roadside Beer Stop for bonus miles and a few seconds of slow-motion. The bike does not move again until the completely fictional pit stop is over.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div>
+        <strong>THE SPOKANISTAN SAGA</strong>
+        <p>The Covenant remains in force after game over.</p>
+      </div>
+      <p><a href="index.html">← Back to actual bad decisions</a></p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
