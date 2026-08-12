@@ -79,7 +79,6 @@
     beerEffectTimer = 0;
     if (beerBlurTimeout) clearTimeout(beerBlurTimeout);
     if (stageWrap) stageWrap.classList.remove('game-beer-blur');
-    document.body.classList.remove('game-running');
     updateHud();
   }
 
@@ -88,14 +87,11 @@
     running = true;
     last = performance.now();
     overlay.classList.add('hidden');
-    document.body.classList.add('game-running');
-    window.scrollTo(0, 0);
     requestAnimationFrame(loop);
   }
 
   function endGame(reason) {
     running = false;
-    document.body.classList.remove('game-running');
     if (stageWrap) stageWrap.classList.remove('game-beer-blur');
     if (miles > best) {
       best = miles;
