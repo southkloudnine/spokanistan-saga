@@ -42,6 +42,8 @@
   let invulnerableTimer = 0;
   let impactTimer = 0;
   let particles = [];
+  let beerEffectTimer = 0;
+  let beerBlurTimeout = null;
 
   bestEl.textContent = `${best.toFixed(1)} mi`;
 
@@ -74,6 +76,10 @@
     invulnerableTimer = 0;
     impactTimer = 0;
     particles = [];
+    beerEffectTimer = 0;
+    if (beerBlurTimeout) clearTimeout(beerBlurTimeout);
+    if (stageWrap) stageWrap.classList.remove('game-beer-blur');
+    document.body.classList.remove('game-running');
     updateHud();
   }
 
@@ -82,11 +88,15 @@
     running = true;
     last = performance.now();
     overlay.classList.add('hidden');
+    document.body.classList.add('game-running');
+    window.scrollTo(0, 0);
     requestAnimationFrame(loop);
   }
 
   function endGame(reason) {
     running = false;
+    document.body.classList.remove('game-running');
+    if (stageWrap) stageWrap.classList.remove('game-beer-blur');
     if (miles > best) {
       best = miles;
       localStorage.setItem('covenantRunBest', String(best));
@@ -159,7 +169,21 @@
     if (obj.type === 'beer') {
       beers += 1;
       miles += 0.5;
+      beerEffectTimer = 2400;
       makeImpact(x, y, 'beer');
+
+      if (stageWrap) {
+        stageWrap.classList.remove('game-beer-blur');
+        void stageWrap.offsetWidth;
+        stageWrap.classList.add('game-beer-blur');
+        if (beerBlurTimeout) clearTimeout(beerBlurTimeout);
+        beerBlurTimeout = setTimeout(() => {
+          stageWrap.classList.remove('game-beer-blur');
+        }, 1650);
+      }
+
+      flashText = 'BEER VISION ENGAGED  +0.5 MI';
+      flashTimer = 1500;
       obj.resolved = true;
       updateHud();
       return;
@@ -207,8 +231,10 @@
     if (invulnerableTimer > 0) invulnerableTimer -= dt;
     if (impactTimer > 0) impactTimer -= dt;
     if (flashTimer > 0) flashTimer -= dt;
+    if (beerEffectTimer > 0) beerEffectTimer -= dt;
 
-    speed = Math.min(155, 60 + miles * 1.45);
+    const normalSpeed = Math.min(155, 60 + miles * 1.45);
+    speed = beerEffectTimer > 0 ? normalSpeed * 0.84 : normalSpeed;
     miles += dt * (0.00245 * (speed / 60));
     sceneryOffset += dt * speed * 0.025;
 
