@@ -44,6 +44,9 @@
   let particles = [];
   let beerEffectTimer = 0;
   let beerBlurTimeout = null;
+  let lastBeerStopAt = -Infinity;
+  let beerWobbleTimer = 0;
+  let beerWobbleElapsed = 0;
 
   bestEl.textContent = `${best.toFixed(1)} mi`;
 
@@ -77,6 +80,9 @@
     impactTimer = 0;
     particles = [];
     beerEffectTimer = 0;
+    lastBeerStopAt = -Infinity;
+    beerWobbleTimer = 0;
+    beerWobbleElapsed = 0;
     if (beerBlurTimeout) clearTimeout(beerBlurTimeout);
     if (stageWrap) stageWrap.classList.remove('game-beer-blur');
     updateHud();
@@ -166,6 +172,16 @@
       beers += 1;
       miles += 0.5;
       beerEffectTimer = 2400;
+
+      const now = performance.now();
+      const rapidDoubleBeer = now - lastBeerStopAt <= 4500;
+      lastBeerStopAt = now;
+
+      if (rapidDoubleBeer) {
+        beerWobbleTimer = 1150;
+        beerWobbleElapsed = 0;
+      }
+
       makeImpact(x, y, 'beer');
 
       if (stageWrap) {
@@ -178,8 +194,10 @@
         }, 1650);
       }
 
-      flashText = 'BEER VISION ENGAGED  +0.5 MI';
-      flashTimer = 1500;
+      flashText = rapidDoubleBeer
+        ? 'DOUBLE BEER. STEERING PRIVILEGES REVOKED.'
+        : 'BEER VISION ENGAGED  +0.5 MI';
+      flashTimer = rapidDoubleBeer ? 1650 : 1500;
       obj.resolved = true;
       updateHud();
       return;
@@ -228,13 +246,27 @@
     if (impactTimer > 0) impactTimer -= dt;
     if (flashTimer > 0) flashTimer -= dt;
     if (beerEffectTimer > 0) beerEffectTimer -= dt;
+    if (beerWobbleTimer > 0) {
+      beerWobbleTimer -= dt;
+      beerWobbleElapsed += dt;
+    }
 
     const normalSpeed = Math.min(155, 60 + miles * 1.45);
     speed = beerEffectTimer > 0 ? normalSpeed * 0.84 : normalSpeed;
     miles += dt * (0.00245 * (speed / 60));
     sceneryOffset += dt * speed * 0.025;
 
-    playerX += (targetX - playerX) * Math.min(1, dt * 0.016);
+    if (beerWobbleTimer > 0) {
+      // Two Beer Stops in quick succession temporarily revoke steering privileges.
+      // The oscillation is intentionally violent, but short-lived.
+      const centerX = laneXAt(playerLane, PLAYER_Y);
+      const amplitude = 118 * Math.min(1, beerWobbleTimer / 260);
+      const primary = Math.sin(beerWobbleElapsed * 0.030) * amplitude;
+      const secondary = Math.sin(beerWobbleElapsed * 0.071) * 34;
+      playerX = centerX + primary + secondary;
+    } else {
+      playerX += (targetX - playerX) * Math.min(1, dt * 0.016);
+    }
 
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
